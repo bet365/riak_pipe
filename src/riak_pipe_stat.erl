@@ -56,10 +56,10 @@ get_stats() ->
     riak_core_stat:get_stats(?APP).
 
 update(Arg) ->
-  case app_helper:get_env(?APP, stat) of
-    stats_off ->
+  case app_helper:get_env(riak_stats, ?MODULE, true) of
+    false ->
       ok;
-    stats_on ->
+    true ->
       gen_server:cast(?SERVER, {update, Arg})
   end.
 
