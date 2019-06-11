@@ -97,12 +97,12 @@ code_change(_OldVsn, State, _Extra) ->
 %% @doc Update the given `Stat'.
 -spec do_update(term()) -> ok.
 do_update(create) -> % TODO: move to exom mgr
-    ok = update([?PFX, ?APP, pipeline, create], 1),
-    update([?PFX, ?APP, pipeline, active], 1);
+    ok = update([pipeline, create], 1),
+    update([pipeline, active], 1);
 do_update(create_error) ->
-    update([?PFX, ?APP, pipeline, create, error], 1);
+    update([pipeline, create, error], 1);
 do_update(destroy) ->
-    update([?PFX, ?APP, pipeline, active], -1).
+    update([pipeline, active], -1).
 
 %% -------------------------------------------------------------------
 %% Private
@@ -119,4 +119,4 @@ stats() ->
     ].
 
 update(Name, Arg) ->
-  riak_stat_mngr:update_stats(Name, Arg).
+  riak_stat_mngr:update_stats(?APP, Name, Arg).
