@@ -34,7 +34,7 @@
 
 -define(SERVER, ?MODULE).
 -define(APP, riak_pipe).
--define(PFX, riak_core_stat:prefix()).
+-define(PFX, riak_stat_mngr:prefix()).
 
 -type stat_type() :: counter | spiral.
 -type stat_options() :: [tuple()].
@@ -48,12 +48,12 @@ start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 register_stats() ->
-    riak_core_stat:register_stats(?APP, stats()).
+  riak_stat_mngr:register_stats(?APP, stats()).
 
 %% @doc Return current aggregation of all stats.
 -spec get_stats() -> proplists:proplist().
 get_stats() ->
-    riak_core_stat:get_stats(?APP).
+  riak_stat_mngr:get_stat(?APP).
 
 update(Arg) ->
   case app_helper:get_env(riak_stats, ?MODULE, true) of
@@ -96,13 +96,13 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc Update the given `Stat'.
 -spec do_update(term()) -> ok.
-do_update(create) ->
-    ok = exometer:update([?PFX, ?APP, pipeline, create], 1),
-    exometer:update([?PFX, ?APP, pipeline, active], 1);
+do_update(create) -> % TODO: move to exom mgr
+    ok = update([?PFX, ?APP, pipeline, create], 1),
+    update([?PFX, ?APP, pipeline, active], 1);
 do_update(create_error) ->
-    exometer:update([?PFX, ?APP, pipeline, create, error], 1);
+    update([?PFX, ?APP, pipeline, create, error], 1);
 do_update(destroy) ->
-    exometer:update([?PFX, ?APP, pipeline, active], -1).
+    update([?PFX, ?APP, pipeline, active], -1).
 
 %% -------------------------------------------------------------------
 %% Private
@@ -117,3 +117,6 @@ stats() ->
                                               {one, pipeline_create_error_one}]},
      {[pipeline, active], counter, [], [{value, pipeline_active}]}
     ].
+
+update(Name, Arg) ->
+  riak_stat_mngr:update_stats(Name, Arg).
