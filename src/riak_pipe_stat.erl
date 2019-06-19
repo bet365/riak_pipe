@@ -53,15 +53,10 @@ register_stats() ->
 %% @doc Return current aggregation of all stats.
 -spec get_stats() -> proplists:proplist().
 get_stats() ->
-  riak_stat_mngr:get_stat(?APP).
+  riak_stat_mngr:get_stats(?APP).
 
 update(Arg) ->
-  case app_helper:get_env(riak_stats, ?MODULE, true) of
-    false ->
-      ok;
-    true ->
-      gen_server:cast(?SERVER, {update, Arg})
-  end.
+      gen_server:cast(?SERVER, {update, Arg}).
 
 %% gen_server
 
@@ -96,13 +91,13 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc Update the given `Stat'.
 -spec do_update(term()) -> ok.
-do_update(create) -> % TODO: move to exom mgr
-    ok = update([pipeline, create], 1),
-    update([pipeline, active], 1);
+do_update(create) ->
+    ok = update([pipeline, create], 1, spiral),
+    update([pipeline, active], 1, counter);
 do_update(create_error) ->
-    update([pipeline, create, error], 1);
+    update([pipeline, create, error], 1, spiral);
 do_update(destroy) ->
-    update([pipeline, active], -1).
+    update([pipeline, active], -1, counter).
 
 %% -------------------------------------------------------------------
 %% Private
@@ -118,5 +113,5 @@ stats() ->
      {[pipeline, active], counter, [], [{value, pipeline_active}]}
     ].
 
-update(Name, Arg) ->
-  riak_stat_mngr:update_stats(?APP, Name, Arg).
+update(Name, Arg, Type) ->
+  riak_stat_mngr:update_or_create(?APP, Name, Arg, Type).
