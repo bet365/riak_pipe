@@ -48,7 +48,8 @@ start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 register_stats() ->
-  riak_stat_mngr:register_stats(?APP, stats()).
+  riak_stat_coordinator:coordinate(admin, {register, {?APP, stats()}}).
+%%  riak_stat_mngr:register_stats(?APP, stats()).
 
 %% @doc Return current aggregation of all stats.
 -spec get_stats() -> proplists:proplist().
@@ -113,5 +114,7 @@ stats() ->
      {[pipeline, active], counter, [], [{value, pipeline_active}]}
     ].
 
-update(Name, Arg, Type) ->
-  riak_stat_mngr:update_or_create(?APP, Name, Arg, Type).
+update(Name, IncrBy, Type) ->
+  riak_stat_coordinator:coordinate(exometer,
+    {update, {lists:flatten([?PFX, ?APP | [Name]]), IncrBy, Type}}).
+%%  riak_stat_mngr:update_or_create(?APP, Name, Arg, Type).
