@@ -34,7 +34,7 @@
 
 -define(SERVER, ?MODULE).
 -define(APP, riak_pipe).
--define(PFX, riak_stat_mngr:prefix()).
+-define(PFX, riak_stat_admin:prefix()).
 
 -type stat_type() :: counter | spiral.
 -type stat_options() :: [tuple()].
@@ -48,13 +48,13 @@ start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 register_stats() ->
-  riak_stat_coordinator:coordinate(admin, {register, {?APP, stats()}}).
+  riak_stat:register(?APP, stats()).
 %%  riak_stat_mngr:register_stats(?APP, stats()).
 
 %% @doc Return current aggregation of all stats.
 -spec get_stats() -> proplists:proplist().
 get_stats() ->
-  riak_stat_mngr:get_stats(?APP).
+  riak_stat:get_app_stats(?APP).
 
 update(Arg) ->
       gen_server:cast(?SERVER, {update, Arg}).
@@ -115,6 +115,5 @@ stats() ->
     ].
 
 update(Name, IncrBy, Type) ->
-  riak_stat_coordinator:coordinate(exometer,
-    {update, {lists:flatten([?PFX, ?APP | [Name]]), IncrBy, Type}}).
+  riak_stat:update(lists:flatten([?PFX, ?APP | [Name]]), IncrBy, Type).
 %%  riak_stat_mngr:update_or_create(?APP, Name, Arg, Type).
